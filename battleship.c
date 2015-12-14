@@ -167,7 +167,7 @@ int random_ship(char array[][COL], int ship_length, char x)
 		{
 			for (i = 0; i < ship_length; i++)
 			{
-				if ((array[col_rand][row_rand+i] == 'P') || (array[col_rand][row_rand+i] == 'S') || (array[col_rand][row_rand+i] == 'C') || (array[col_rand][row_rand+i] == 'D') || (array[col_rand][row_rand+i] == 'B') || (array[col_rand][row_rand+i] == 'A'))
+				if ((array[col_rand][row_rand+i] != '0'))
 				{
 					printf("OVERLAP 1\n");
 					overlap = 1;
