@@ -31,25 +31,33 @@ struct carrier {
 	int aircraft_carrier;
 };
 
-int random_ship(char array[][COL], int ship_length, char x);
+int random_ship(char array[][COL], int ship_length, char character);
+void printboard(char array[][COL]);
+int savefile(char array[][COL], char * x);
+int shipcount(char array[][COL]);
 
-int main (void)
+int main (int argc, char * argv[])
 {
+	if (argc == 2)
+	{
+		printf("happy\n");
+	}
+	char * x;
+
+	x = argv[1];
+
 	srand(time(NULL));
 
-	int x = rand()%1+10;
+	int number = rand()%1+10;
 
-	printf("Size %d\n", x);
+	printf("Size %d\n", number);
 	
 	char array[10][10]; //randomize row and col
 
-	memset(array, '0', sizeof(array));
+	memset(array, 'X', sizeof(array));
 
-	int i = 0;
-	int j = 0;
 	char character;
 	int ship_length;
-	int count = 0;
 
 	//function to set structure values
 
@@ -75,57 +83,76 @@ int main (void)
 	printf("Size of aircraft carrier: %d\n", car.aircraft_carrier);
 	printf("\n");
 
-	while(1)
+	ship_length = pat.patrol_boat;
+	character = 'P';
+	while(random_ship(array, ship_length, character) != 1);
+
+	ship_length = subm.submarine;
+	character = 'S';
+	while(random_ship(array, ship_length, character) != 1);
+
+	ship_length = crus.cruiser;
+	character = 'C';
+	while(random_ship(array, ship_length, character) != 1);
+
+	ship_length = des.destroyer;
+	character = 'D';
+	while(random_ship(array, ship_length, character) != 1);
+
+	ship_length = bat.battleship;
+	character = 'B';
+	while(random_ship(array, ship_length, character) != 1);
+
+	ship_length = car.aircraft_carrier;
+	character = 'A';
+	while(random_ship(array, ship_length, character) != 1);
+
+	shipcount(array);
+	printboard(array);
+	savefile(array, x);
+}
+
+int shipcount(char array[][COL])
+{
+	int patrolboat;
+	for (int j = 0; j < ROW; j++)
 	{
-		if (count == 0)
+		for (int i = 0; i < COL; i++)
 		{
-			ship_length = pat.patrol_boat;
-			character = 'P';
-			random_ship(array, ship_length, character);
-			count++;
-		}
-		else if (count == 1)
-		{
-			ship_length = subm.submarine;
-			character = 'S';
-			random_ship(array, ship_length, character);
-			count++;
-		}
-		else if (count == 2)
-		{
-			ship_length = crus.cruiser;
-			character = 'C';
-			random_ship(array, ship_length, character);
-			count++;
-		}
-		else if (count == 3)
-		{
-			ship_length = des.destroyer;
-			character = 'D';
-			random_ship(array, ship_length, character);
-			count++;
-		}
-		else if (count == 4)
-		{
-			ship_length = bat.battleship;
-			character = 'B';
-			random_ship(array, ship_length, character);
-			count++;
-		}
-		else if (count == 5)
-		{
-			ship_length = car.aircraft_carrier;
-			character = 'A';
-			random_ship(array, ship_length, character);
-			count++;
-		}
-		else
-		{
-			break;
+			if (array[j][i] == 'P')
+			{
+				patrolboat = 1;
+				return patrolboat;
+			}
 		}
 	}
 
-	//function to print out grid
+	return 10000000;
+}
+
+int savefile(char array[][COL], char * x)
+{
+	FILE *fp;
+	fp = fopen(x, "w+");
+
+	for (int j = 0; j < ROW; j++)
+	{
+		for (int i = 0; i < COL; i++)
+		{
+			fprintf(fp, "%c", array[j][i]);
+		}
+		fprintf(fp, "\n");
+	}
+
+	fclose(fp);
+
+	return 1;
+}
+
+void printboard(char array[][COL])
+{
+	int i;
+	int j;
 
 	for (j = 0; j < ROW; j++)
 	{
@@ -133,153 +160,91 @@ int main (void)
 		for (i = 0; i < COL; i++)
 		{
 			printf("%c ", array[j][i]);
-
-		
-			if ((i % 9 == 0) && (i != 0))
-			{
-				//printf("end");
-			}
-			
-
 		}
-
 		printf("\n");		
 	}
 }
 
-int random_ship(char array[][COL], int ship_length, char x)
+int random_ship(char array[][COL], int ship_length, char character)
 {
 	int horizantal;
-	int overlap;
-	int j;
 	int i;
 
 	horizantal = rand()%2;
-
-	printf("Horizantal %d\n", horizantal);
 
 	if (horizantal == 0)
 	{
 		int col_rand = rand()%10;//vertical
 		int row_rand = rand()%10;
 
-		for (j = 0; j < col_rand; j++)
+		for (i = 0; i < ship_length; i++)
 		{
-			for (i = 0; i < ship_length; i++)
-			{
-				if ((array[col_rand][row_rand+i] != '0'))
+			if (row_rand <= 5)
+			{			
+				if (array[col_rand][row_rand+i] != 'X')
 				{
-					printf("OVERLAP 1\n");
-					overlap = 1;
-					break;
+					return 0;
 				}
-				else
-				{
-
-				}
-				/*
-				else
-				{
-					if (row_rand <= ship_length)
-					{
-						array[col_rand][row_rand+i] = x;
-					}
-					else
-					{
-						array[col_rand][row_rand-i] = x;
-					}
-				}
-				*/
-			}
-		
-			if (overlap == 1)
-			{	
-				col_rand = rand()%10;
-				row_rand = rand()%10;
-				break;
 			}
 			else
 			{
-
-				for (int plea = 0; plea < row_rand; plea++)
+				if (array[col_rand][row_rand-i] != 'X')
 				{
-					for (int apple = 0; apple < ship_length; apple++)
-					{
-						if (row_rand <= 5)
-						{
-							array[col_rand][row_rand+apple] = x;
-						}
-						else
-						{
-							array[col_rand][row_rand-apple] = x;
-						}
-					}
+					return 0;
 				}
 			}
-			break;
 		}
+
+		for (int apple = 0; apple < ship_length; apple++)
+		{
+			if (row_rand <= 5)
+			{
+				array[col_rand][row_rand+apple] = character;
+
+			}
+			else
+			{
+				array[col_rand][row_rand-apple] = character;
+			}
+		}
+		return 1;
 	}
 	else
 	{
 		int col_rand = rand()%10;//vertical
 		int row_rand = rand()%10;
 
-		for (j = 0; j < row_rand; j++)
+		for (i = 0; i < ship_length; i++)
 		{
-			for (i = 0; i < ship_length; i++)
-			{
-				if ((array[col_rand+i][row_rand] == 'P') || (array[col_rand+i][row_rand] == 'S') || (array[col_rand+i][row_rand] == 'C') || (array[col_rand+i][row_rand] == 'D') || (array[col_rand+i][row_rand] == 'B') || (array[col_rand+i][row_rand] == 'A'))
+			if (col_rand <= 5)
+			{			
+				if (array[col_rand+i][row_rand] != 'X')
 				{
-					printf("OVERLAP 2\n");
-					overlap = 1;
-					break;
+					return 0;
 				}
-				else
-				{
-					//
-				}
-				/*
-				else
-				{
-					if (col_rand <= 5)
-					{
-						array[col_rand+i][row_rand] = x;
-					}
-					else
-					{
-						array[col_rand-i][row_rand] = x;
-					}
-				}
-				*/
 			}
-		
-			if (overlap == 1)
-			{	
-				col_rand = rand()%10;
-				row_rand = rand()%10;
-				break;
-			}
-
 			else
 			{
-				for (int poop = 0; poop < row_rand; poop++)
+				if (array[col_rand-i][row_rand] != 'X')
 				{
-					for (int more = 0; more < ship_length; more++)
-					{
-						if (col_rand <= 5)
-						{
-							array[col_rand+more][row_rand] = x;
-						}
-						else
-						{
-							array[col_rand-more][row_rand] = x;
-						}
-					}
+					return 0;
 				}
 			}
-			break;
+			
 		}
+
+		for (int apples = 0; apples < ship_length; apples++)
+		{
+			if (col_rand <= 5)
+			{
+				array[col_rand+apples][row_rand] = character;
+			}
+			else
+			{
+				array[col_rand-apples][row_rand] = character;
+			}
+		}
+
+		return 1;
 	}
-	
-	return 1;
 }
