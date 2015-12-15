@@ -35,6 +35,7 @@ int random_ship(char **array, int ship_length, char character);
 void printboard(char **array);
 int savefile(char **array, char * x);
 int shipcount(char **array, int * shipcounter);
+int hitmiss(char ** array);
 
 int main (int argc, char * argv[])
 {
@@ -47,14 +48,6 @@ int main (int argc, char * argv[])
 	x = argv[1];
 
 	srand(time(NULL));
-
-	int number = rand()%1+10;
-
-	printf("Size %d\n", number);
-	
-	//char array[10][10]; //randomize row and col
-
-	
 
 	char ** array;
 	array = malloc((ROW + 1) * sizeof(void*));
@@ -119,6 +112,8 @@ int main (int argc, char * argv[])
 	shipcount(array, shipcounter);
 	printf("Ships left: %d\n", *shipcounter);
 	printboard(array);
+	hitmiss(array);
+	printboard(array);
 	savefile(array, x);
 
 
@@ -129,6 +124,29 @@ int main (int argc, char * argv[])
 		free(array[freer]);
 	}
 	free(array);
+}
+
+int hitmiss(char ** array)
+{
+	int number;
+	printf("Give row number to fire at : ");
+	scanf("%d", &number);
+	printf("\n");
+	printf("Number: %d\n", number);
+
+	int number1;
+	printf("Give column number to fire at : ");
+	scanf("%d", &number1);
+	printf("\n");
+	printf("Number: %d\n", number1);
+
+	if (array[number][number1] != 'X')
+	{
+		printf("Hit\n");
+		array[number][number1] = '*';
+	}
+	
+	return 1;
 }
 
 int shipcount(char **array, int* shipcounter)
@@ -220,13 +238,13 @@ int random_ship(char **array, int ship_length, char character)
 
 	if (horizantal == 0)
 	{
-		int col_rand = rand()%10;//vertical
-		int row_rand = rand()%10;
+		int col_rand = rand()%COL;//vertical
+		int row_rand = rand()%ROW;
 
 
 		for (i = 0; i < ship_length; i++)
 		{
-			if (row_rand <= 5)
+			if (row_rand <= (ROW/2))
 			{			
 				if (array[col_rand][row_rand+i] != 'X')
 				{
@@ -246,7 +264,7 @@ int random_ship(char **array, int ship_length, char character)
 	
 		for (int apple = 0; apple < ship_length; apple++)
 		{
-			if (row_rand <= 5)
+			if (row_rand <= (ROW/2))
 			{
 				array[col_rand][row_rand+apple] = character;
 
@@ -260,12 +278,12 @@ int random_ship(char **array, int ship_length, char character)
 	}
 	else
 	{
-		int col_rand = rand()%10;//vertical
-		int row_rand = rand()%10;
+		int col_rand = rand()%COL;//vertical
+		int row_rand = rand()%ROW;
 
 		for (i = 0; i < ship_length; i++)
 		{
-			if (col_rand <= 5)
+			if (col_rand <= (COL/2))
 			{			
 				if (array[col_rand+i][row_rand] != 'X')
 				{
@@ -284,7 +302,7 @@ int random_ship(char **array, int ship_length, char character)
 
 		for (int apples = 0; apples < ship_length; apples++)
 		{
-			if (col_rand <= 5)
+			if (col_rand <= (COL/2))
 			{
 				array[col_rand+apples][row_rand] = character;
 			}
