@@ -31,10 +31,10 @@ struct carrier {
 	int aircraft_carrier;
 };
 
-int random_ship(char array[][COL], int ship_length, char character);
-void printboard(char array[][COL]);
-int savefile(char array[][COL], char * x);
-int shipcount(char array[][COL]);
+int random_ship(char **array, int ship_length, char character);
+void printboard(char **array);
+int savefile(char **array, char * x);
+int shipcount(char **array, int * shipcounter);
 
 int main (int argc, char * argv[])
 {
@@ -52,12 +52,21 @@ int main (int argc, char * argv[])
 
 	printf("Size %d\n", number);
 	
-	char array[10][10]; //randomize row and col
+	//char array[10][10]; //randomize row and col
 
-	memset(array, 'X', sizeof(array));
+	
+
+	char ** array;
+	array = malloc((ROW + 1) * sizeof(void*));
+	for (int u = 0; u < ROW + 1; u++)
+	{
+		array[u] = malloc((COL + 1)*sizeof(char));
+		memset(array[u], 'X', (COL + 1)*sizeof(char));
+	}
 
 	char character;
 	int ship_length;
+	int * shipcounter = malloc(sizeof(shipcounter));
 
 	//function to set structure values
 
@@ -107,14 +116,30 @@ int main (int argc, char * argv[])
 	character = 'A';
 	while(random_ship(array, ship_length, character) != 1);
 
-	shipcount(array);
+	shipcount(array, shipcounter);
+	printf("Ships left: %d\n", *shipcounter);
 	printboard(array);
 	savefile(array, x);
+
+
+	free(shipcounter);
+
+	for (int freer = 0; freer < (ROW + 1); freer++)
+	{
+		free(array[freer]);
+	}
+	free(array);
 }
 
-int shipcount(char array[][COL])
+int shipcount(char **array, int* shipcounter)
 {
-	int patrolboat;
+	int patrolboat = 0;
+	int submarine = 0;
+	int cruiser = 0;
+	int destroyer = 0;
+	int battleship = 0;
+	int carrier = 0;
+
 	for (int j = 0; j < ROW; j++)
 	{
 		for (int i = 0; i < COL; i++)
@@ -122,15 +147,36 @@ int shipcount(char array[][COL])
 			if (array[j][i] == 'P')
 			{
 				patrolboat = 1;
-				return patrolboat;
+			}
+			else if (array[j][i] == 'S')
+			{
+				submarine = 1;
+			}
+			else if (array[j][i] == 'C')
+			{
+				cruiser = 1;
+			}
+			else if (array[j][i] == 'D')
+			{
+				destroyer = 1;
+			}
+			else if (array[j][i] == 'B')
+			{
+				battleship = 1;
+			}
+			else if (array[j][i] == 'A')
+			{
+				carrier = 1;
 			}
 		}
 	}
 
-	return 10000000;
+	*shipcounter = patrolboat + submarine + cruiser + destroyer + battleship + carrier;
+
+	return 1;
 }
 
-int savefile(char array[][COL], char * x)
+int savefile(char **array, char * x)
 {
 	FILE *fp;
 	fp = fopen(x, "w+");
@@ -149,7 +195,7 @@ int savefile(char array[][COL], char * x)
 	return 1;
 }
 
-void printboard(char array[][COL])
+void printboard(char **array)
 {
 	int i;
 	int j;
@@ -165,7 +211,7 @@ void printboard(char array[][COL])
 	}
 }
 
-int random_ship(char array[][COL], int ship_length, char character)
+int random_ship(char **array, int ship_length, char character)
 {
 	int horizantal;
 	int i;
@@ -176,6 +222,7 @@ int random_ship(char array[][COL], int ship_length, char character)
 	{
 		int col_rand = rand()%10;//vertical
 		int row_rand = rand()%10;
+
 
 		for (i = 0; i < ship_length; i++)
 		{
@@ -195,6 +242,8 @@ int random_ship(char array[][COL], int ship_length, char character)
 			}
 		}
 
+
+	
 		for (int apple = 0; apple < ship_length; apple++)
 		{
 			if (row_rand <= 5)
