@@ -36,7 +36,8 @@ void printboard(char **array);
 int savefile(char **array, char * x);
 int shipcount(char **array, int * shipcounter);
 int hitmiss(char ** array);
-int ship_size(char ** array);
+int ship_set(char ** array);
+int menu(int * c);
 
 int main (int argc, char * argv[])
 {
@@ -59,24 +60,62 @@ int main (int argc, char * argv[])
 	}
 
 	int * shipcounter = malloc(sizeof(shipcounter));
+	int * c = malloc(sizeof(c));
 
-	ship_size(array);
-	savefile(array, x);
-	shipcount(array, shipcounter);
+	*c = 0;
+
+	ship_set(array);
+
 	while(1)
 	{
-		shipcount(array, shipcounter);
-		printf("Ships left: %d\n", *shipcounter);
-		if (*shipcounter <= 0)
+		if (menu(c) == 0)
 		{
-			printf("Game done\n");
 			break;
 		}
-		printboard(array);
-		hitmiss(array);
+		else
+		{
+			//printf("Value: %d\n", *c);
+		}
+
+		if (*c == 1)
+		{
+			savefile(array, x);
+			printf("File saved\n");
+		}
+		else if (*c == 2)
+		{
+			printf("Quitting\n");
+			for (int freer = 0; freer < (ROW + 1); freer++)
+			{
+				free(array[freer]);
+			}
+			free(array);
+
+			free(shipcounter);
+			free(c);
+			exit(1);
+		}
+		else if (*c == 3)
+		{
+			shipcount(array, shipcounter);
+			printf("Ships left: %d\n", *shipcounter);
+			if (*shipcounter <= 0)
+			{
+				printf("Game done\n");
+				break;
+			}
+			printboard(array);
+			hitmiss(array);
+		}
+		else if ((*c < 0) || (*c > 3))
+		{	
+			printf("Error\n");
+			//break;
+		}
 	}
 
 	free(shipcounter);
+	free(c);
 
 	for (int freer = 0; freer < (ROW + 1); freer++)
 	{
@@ -85,9 +124,28 @@ int main (int argc, char * argv[])
 	free(array);
 }
 
-int ship_size(char ** array)
+//menu used to ask user if they want to save file or not
+int menu(int * c)
 {
-	//function to set structure values
+	int d;
+	printf("1)Save\n");
+	printf("2)Quit\n");
+	printf("3)Fire\n");
+	printf("Enter your choice: ");
+	if (scanf("%d", &d) == 1)
+	{
+		*c = d;
+	}
+	else
+	{
+		return 0;
+	}
+
+	return 1;		
+}
+
+int ship_set(char ** array)
+{
 	char character;
 	int ship_length;
 
@@ -105,6 +163,7 @@ int ship_size(char ** array)
 	bat.battleship = 4;
 	car.aircraft_carrier = 5;
 
+	/*
 	printf("Size of patrol boat: %d\n", pat.patrol_boat);
 	printf("Size of submarine: %d\n", subm.submarine);
 	printf("Size of cruiser: %d\n", crus.cruiser);
@@ -112,6 +171,7 @@ int ship_size(char ** array)
 	printf("Size of battleship: %d\n", bat.battleship);
 	printf("Size of aircraft carrier: %d\n", car.aircraft_carrier);
 	printf("\n");
+	*/
 
 	ship_length = pat.patrol_boat;
 	character = 'P';
