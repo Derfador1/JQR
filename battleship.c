@@ -4,7 +4,6 @@
 #include <time.h>
 #define ROW 10
 #define COL 10
-#define numb_ships 6
 
 
 struct patrol {
@@ -31,17 +30,19 @@ struct carrier {
 	int aircraft_carrier;
 };
 
+
 int random_ship(char **array, int ship_length, char character);
 void printboard(char **array);
 int savefile(char **array, char * x);
 int shipcount(char **array, int * shipcounter);
 int hitmiss(char ** array);
+int ship_size(char ** array);
 
 int main (int argc, char * argv[])
 {
 	if (argc == 2)
 	{
-		printf("happy\n");
+		printf("Run check for argument value\n");
 	}
 	char * x;
 
@@ -57,11 +58,38 @@ int main (int argc, char * argv[])
 		memset(array[u], 'X', (COL + 1)*sizeof(char));
 	}
 
-	char character;
-	int ship_length;
 	int * shipcounter = malloc(sizeof(shipcounter));
 
+	ship_size(array);
+	savefile(array, x);
+	shipcount(array, shipcounter);
+	while(1)
+	{
+		shipcount(array, shipcounter);
+		printf("Ships left: %d\n", *shipcounter);
+		if (*shipcounter <= 0)
+		{
+			printf("Game done\n");
+			break;
+		}
+		printboard(array);
+		hitmiss(array);
+	}
+
+	free(shipcounter);
+
+	for (int freer = 0; freer < (ROW + 1); freer++)
+	{
+		free(array[freer]);
+	}
+	free(array);
+}
+
+int ship_size(char ** array)
+{
 	//function to set structure values
+	char character;
+	int ship_length;
 
 	struct patrol pat;
 	struct sub subm;
@@ -109,21 +137,7 @@ int main (int argc, char * argv[])
 	character = 'A';
 	while(random_ship(array, ship_length, character) != 1);
 
-	shipcount(array, shipcounter);
-	printf("Ships left: %d\n", *shipcounter);
-	printboard(array);
-	hitmiss(array);
-	printboard(array);
-	savefile(array, x);
-
-
-	free(shipcounter);
-
-	for (int freer = 0; freer < (ROW + 1); freer++)
-	{
-		free(array[freer]);
-	}
-	free(array);
+	return 1;
 }
 
 int hitmiss(char ** array)
@@ -140,10 +154,18 @@ int hitmiss(char ** array)
 	printf("\n");
 	printf("Number: %d\n", number1);
 
-	if (array[number][number1] != 'X')
+	if (array[number][number1] != 'X' && array[number][number1] != '*')
 	{
 		printf("Hit\n");
 		array[number][number1] = '*';
+	}
+	else if (array[number][number1] == '*')
+	{
+		printf("Already hit\n");
+	}
+	else
+	{
+		printf("Miss\n");
 	}
 	
 	return 1;
