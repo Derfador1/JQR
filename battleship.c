@@ -5,117 +5,37 @@
 #define ROW 10
 #define COL 10
 
+#include "battleship_header.h"
 
-struct patrol {
-	int patrol_boat;
-};
-
-struct sub {
-	int submarine;
-};
-
-struct cru {
-	int cruiser;
-};
-
-struct  dest {
-	int destroyer;
-};
-
-struct battle {
-	int battleship;
-};
-
-struct carrier {
-	int aircraft_carrier;
-};
-
-
-int random_ship(char **array, int ship_length, char character);
-void printboard(char **array);
-int savefile(char **array, char * x);
-int shipcount(char **array, int * shipcounter);
-int hitmiss(char ** array);
-int ship_set(char ** array);
-int menu(int * c);
-
-int main (int argc, char * argv[])
+int main (int argc, char * argv[]) //int menu (char * argv[]) for file input
 {
+	srand(time(NULL));
+
 	if (argc == 2)
 	{
 		printf("Run check for argument value\n");
 	}
 	char * x;
 
-	x = argv[1];
-
-	srand(time(NULL));
+	int * shipcounter = malloc(sizeof(shipcounter));
 
 	char ** array;
+
+	x = argv[1];
+
 	array = malloc((ROW + 1) * sizeof(void*));
 	for (int u = 0; u < ROW + 1; u++)
 	{
 		array[u] = malloc((COL + 1)*sizeof(char));
-		memset(array[u], 'X', (COL + 1)*sizeof(char));
+		memset(array[u], '*', (COL + 1)*sizeof(char));
 	}
 
-	int * shipcounter = malloc(sizeof(shipcounter));
-	int * c = malloc(sizeof(c));
-
-	*c = 0;
 
 	ship_set(array);
 
-	while(1)
-	{
-		if (menu(c) == 0)
-		{
-			break;
-		}
-		else
-		{
-			//printf("Value: %d\n", *c);
-		}
-
-		if (*c == 1)
-		{
-			savefile(array, x);
-			printf("File saved\n");
-		}
-		else if (*c == 2)
-		{
-			printf("Quitting\n");
-			for (int freer = 0; freer < (ROW + 1); freer++)
-			{
-				free(array[freer]);
-			}
-			free(array);
-
-			free(shipcounter);
-			free(c);
-			exit(1);
-		}
-		else if (*c == 3)
-		{
-			shipcount(array, shipcounter);
-			printf("Ships left: %d\n", *shipcounter);
-			if (*shipcounter <= 0)
-			{
-				printf("Game done\n");
-				break;
-			}
-			printboard(array);
-			hitmiss(array);
-		}
-		else if ((*c < 0) || (*c > 3))
-		{	
-			printf("Error\n");
-			//break;
-		}
-	}
+	menu_actions(array, x, shipcounter);
 
 	free(shipcounter);
-	free(c);
 
 	for (int freer = 0; freer < (ROW + 1); freer++)
 	{
@@ -125,24 +45,70 @@ int main (int argc, char * argv[])
 }
 
 //menu used to ask user if they want to save file or not
-int menu(int * c)
+int menu_actions(char ** array, char * x, int * shipcounter)
 {
-	int d;
-	printf("1)Save\n");
-	printf("2)Quit\n");
-	printf("3)Fire\n");
-	printf("Enter your choice: ");
-	if (scanf("%d", &d) == 1)
+	while(1)
 	{
-		*c = d;
-	}
-	else
-	{
-		return 0;
+		char buffer[20];
+
+		printf("1)Save\n");
+		printf("2)Quit\n");
+		printf("3)Fire\n");
+		printf("4)Load game board");
+		printf("Enter your choice: ");
+
+		fgets(buffer, 20, stdin);
+
+		char * err;
+
+		long choice = strtol(buffer, &err, 10);
+
+		switch(choice)
+		{
+		case 1:
+			savefile(array, x);
+			printf("File saved\n");
+			break;
+		case 2:
+			printf("Quitting\n");
+			for (int freer = 0; freer < (ROW + 1); freer++)
+			{
+				free(array[freer]);
+			}
+			free(array);
+
+			free(shipcounter);
+			exit(1);
+		case 3:
+			shipcount(array, shipcounter);
+			printf("Ships left: %d\n", *shipcounter);
+			if (*shipcounter <= 0)
+			{
+				printf("Game done\n");
+				break;
+			}
+			printboard(array);
+			hitmiss(array);
+			fgetc(stdin);
+			break;
+		case 4:
+			printf("Load game board\n");
+			break;
+		
+		default:
+			printf("Invalid entry, try again\n");
+		}
 	}
 
 	return 1;		
 }
+
+/*
+int load_game(char ** array)
+{
+	
+}
+*/
 
 int ship_set(char ** array)
 {
@@ -162,16 +128,6 @@ int ship_set(char ** array)
 	des.destroyer = 3;
 	bat.battleship = 4;
 	car.aircraft_carrier = 5;
-
-	/*
-	printf("Size of patrol boat: %d\n", pat.patrol_boat);
-	printf("Size of submarine: %d\n", subm.submarine);
-	printf("Size of cruiser: %d\n", crus.cruiser);
-	printf("Size of destroyer: %d\n", des.destroyer);
-	printf("Size of battleship: %d\n", bat.battleship);
-	printf("Size of aircraft carrier: %d\n", car.aircraft_carrier);
-	printf("\n");
-	*/
 
 	ship_length = pat.patrol_boat;
 	character = 'P';
@@ -214,12 +170,12 @@ int hitmiss(char ** array)
 	printf("\n");
 	printf("Number: %d\n", number1);
 
-	if (array[number][number1] != 'X' && array[number][number1] != '*')
+	if (array[number][number1] != '*' && array[number][number1] != 'x')
 	{
 		printf("Hit\n");
-		array[number][number1] = '*';
+		array[number][number1] = 'x';
 	}
-	else if (array[number][number1] == '*')
+	else if (array[number][number1] == 'x')
 	{
 		printf("Already hit\n");
 	}
@@ -328,14 +284,14 @@ int random_ship(char **array, int ship_length, char character)
 		{
 			if (row_rand <= (ROW/2))
 			{			
-				if (array[col_rand][row_rand+i] != 'X')
+				if (array[col_rand][row_rand+i] != '*')
 				{
 					return 0;
 				}
 			}
 			else
 			{
-				if (array[col_rand][row_rand-i] != 'X')
+				if (array[col_rand][row_rand-i] != '*')
 				{
 					return 0;
 				}
@@ -367,14 +323,14 @@ int random_ship(char **array, int ship_length, char character)
 		{
 			if (col_rand <= (COL/2))
 			{			
-				if (array[col_rand+i][row_rand] != 'X')
+				if (array[col_rand+i][row_rand] != '*')
 				{
 					return 0;
 				}
 			}
 			else
 			{
-				if (array[col_rand-i][row_rand] != 'X')
+				if (array[col_rand-i][row_rand] != '*')
 				{
 					return 0;
 				}
