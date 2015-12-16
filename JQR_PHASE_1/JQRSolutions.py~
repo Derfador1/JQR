@@ -1,0 +1,10 @@
+#!/usr/bin/env python
+import ctypes
+import os
+import JQRSolution as Sol
+
+
+def getResult(taskNum, data):
+
+
+    return "FAIL"
