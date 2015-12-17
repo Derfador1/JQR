@@ -2,12 +2,13 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
-#define ROW 10
-#define COL 10
+#define COL 12
+#define ROW 14
+
 
 #include "battleship_header.h"
 
-int main (int argc, char * argv[]) //int menu (char * argv[]) for file input
+int main (int argc, char * argv[]) //int menu (char * argv[]) for file input //add save file option
 {
 	srand(time(NULL));
 
@@ -23,13 +24,12 @@ int main (int argc, char * argv[]) //int menu (char * argv[]) for file input
 
 	x = argv[1];
 
-	array = malloc((ROW + 1) * sizeof(void*));
-	for (int u = 0; u < ROW + 1; u++)
+	array = malloc(ROW* sizeof(void*));
+	for (int u = 0; u < ROW; u++)
 	{
-		array[u] = malloc((COL + 1)*sizeof(char));
-		memset(array[u], '*', (COL + 1)*sizeof(char));
+		array[u] = malloc(COL*sizeof(char));
+		memset(array[u], '*', (COL*sizeof(char)));
 	}
-
 
 	ship_set(array);
 
@@ -37,11 +37,12 @@ int main (int argc, char * argv[]) //int menu (char * argv[]) for file input
 
 	free(shipcounter);
 
-	for (int freer = 0; freer < (ROW + 1); freer++)
+	for (int freer = 0; freer < ROW; freer++)
 	{
 		free(array[freer]);
 	}
 	free(array);
+	
 }
 
 //menu used to ask user if they want to save file or not
@@ -54,7 +55,7 @@ int menu_actions(char ** array, char * x, int * shipcounter)
 		printf("1)Save\n");
 		printf("2)Quit\n");
 		printf("3)Fire\n");
-		printf("4)Load game board");
+		printf("4)Load game board\n");
 		printf("Enter your choice: ");
 
 		fgets(buffer, 20, stdin);
@@ -71,7 +72,7 @@ int menu_actions(char ** array, char * x, int * shipcounter)
 			break;
 		case 2:
 			printf("Quitting\n");
-			for (int freer = 0; freer < (ROW + 1); freer++)
+			for (int freer = 0; freer < ROW; freer++)
 			{
 				free(array[freer]);
 			}
@@ -92,6 +93,7 @@ int menu_actions(char ** array, char * x, int * shipcounter)
 			fgetc(stdin);
 			break;
 		case 4:
+			load_game();
 			printf("Load game board\n");
 			break;
 		
@@ -103,12 +105,32 @@ int menu_actions(char ** array, char * x, int * shipcounter)
 	return 1;		
 }
 
-/*
-int load_game(char ** array)
+
+int load_game()
 {
-	
+	FILE *fp = fopen("boobs", "r");
+
+	char *buffer = malloc(1024);
+
+	memset(buffer, '\0', 1024);
+
+	int c = 0;
+	size_t cn;
+
+	while(fgets(buffer, 100, fp))
+	{
+		c++;
+		cn = (strlen(buffer) - 1);
+		printf("Lines %d\n", c);
+		printf("Size %zd\n", cn);
+	}
+
+	free(buffer);
+	fclose(fp);
+
+	return 1;
 }
-*/
+
 
 int ship_set(char ** array)
 {
@@ -165,7 +187,7 @@ int hitmiss(char ** array)
 	printf("Number: %d\n", number);
 
 	int number1;
-	printf("Give column number to fire at : ");
+	printf("Give col number to fire at : ");
 	scanf("%d", &number1);
 	printf("\n");
 	printf("Number: %d\n", number1);
@@ -229,6 +251,8 @@ int shipcount(char **array, int* shipcounter)
 
 	*shipcounter = patrolboat + submarine + cruiser + destroyer + battleship + carrier;
 
+	printf("shipcounter %d\n", *shipcounter);
+
 	return 1;
 }
 
@@ -258,7 +282,6 @@ void printboard(char **array)
 
 	for (j = 0; j < ROW; j++)
 	{
-
 		for (i = 0; i < COL; i++)
 		{
 			printf("%c ", array[j][i]);
@@ -269,6 +292,7 @@ void printboard(char **array)
 
 int random_ship(char **array, int ship_length, char character)
 {
+	//printf();
 	int horizantal;
 	int i;
 
@@ -276,22 +300,22 @@ int random_ship(char **array, int ship_length, char character)
 
 	if (horizantal == 0)
 	{
-		int col_rand = rand()%COL;//vertical
-		int row_rand = rand()%ROW;
-
+		int ROW_rand = rand()%ROW;//vertical
+		int COL_rand = rand()%COL;
+		
 
 		for (i = 0; i < ship_length; i++)
 		{
-			if (row_rand <= (ROW/2))
+			if (COL_rand <= (COL/2))
 			{			
-				if (array[col_rand][row_rand+i] != '*')
+				if (array[ROW_rand][COL_rand+i] != '*')
 				{
 					return 0;
 				}
 			}
 			else
 			{
-				if (array[col_rand][row_rand-i] != '*')
+				if (array[ROW_rand][COL_rand-i] != '*')
 				{
 					return 0;
 				}
@@ -302,35 +326,35 @@ int random_ship(char **array, int ship_length, char character)
 	
 		for (int apple = 0; apple < ship_length; apple++)
 		{
-			if (row_rand <= (ROW/2))
+			if (COL_rand <= (COL/2))
 			{
-				array[col_rand][row_rand+apple] = character;
+				array[ROW_rand][COL_rand+apple] = character;
 
 			}
 			else
 			{
-				array[col_rand][row_rand-apple] = character;
+				array[ROW_rand][COL_rand-apple] = character;
 			}
 		}
 		return 1;
 	}
 	else
 	{
-		int col_rand = rand()%COL;//vertical
-		int row_rand = rand()%ROW;
+		int ROW_rand = rand()%ROW;//vertical
+		int COL_rand = rand()%COL;
 
 		for (i = 0; i < ship_length; i++)
 		{
-			if (col_rand <= (COL/2))
+			if (ROW_rand <= (ROW/2))
 			{			
-				if (array[col_rand+i][row_rand] != '*')
+				if (array[ROW_rand+i][COL_rand] != '*')
 				{
 					return 0;
 				}
 			}
 			else
 			{
-				if (array[col_rand-i][row_rand] != '*')
+				if (array[ROW_rand-i][COL_rand] != '*')
 				{
 					return 0;
 				}
@@ -340,13 +364,13 @@ int random_ship(char **array, int ship_length, char character)
 
 		for (int apples = 0; apples < ship_length; apples++)
 		{
-			if (col_rand <= (COL/2))
+			if (ROW_rand <= (ROW/2))
 			{
-				array[col_rand+apples][row_rand] = character;
+				array[ROW_rand+apples][COL_rand] = character;
 			}
 			else
 			{
-				array[col_rand-apples][row_rand] = character;
+				array[ROW_rand-apples][COL_rand] = character;
 			}
 		}
 
