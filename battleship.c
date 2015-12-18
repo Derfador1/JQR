@@ -36,6 +36,8 @@ int main (int argc, char * argv[]) //int menu (char * argv[]) for file input //a
 
 	x = argv[1];
 
+
+	//mallocing my 2 dimensional array
 	array = malloc((*row) * sizeof(void*));
 	for (int u = 0; u < (*row); u++)
 	{
@@ -43,12 +45,18 @@ int main (int argc, char * argv[]) //int menu (char * argv[]) for file input //a
 		memset(array[u], '*', ((*col) * sizeof(char)));
 	}
 
-	ship_set(array, row, col);
+	if (ship_set(array, row, col) != 1)
+	{
+		free_func(array, row, col, shipcounter);
+		exit(1);
+	}
 
-	menu_actions(array, x, shipcounter, row, col);
+	menu_actions(array, x, shipcounter, row, col); //error checking happens here
 
 	free(shipcounter);
 
+
+	//way to free my 2 dimensional array
 	for (int freer = 0; freer < (*row); freer++)
 	{
 		free(array[freer]);
@@ -60,7 +68,7 @@ int main (int argc, char * argv[]) //int menu (char * argv[]) for file input //a
 }
 
 //menu used to ask user if they want to save file or not
-int menu_actions(char ** array, char * x, int * shipcounter, int * row, int * col)
+void menu_actions(char ** array, char * x, int * shipcounter, int * row, int * col)
 {
 	while(1)
 	{
@@ -78,7 +86,7 @@ int menu_actions(char ** array, char * x, int * shipcounter, int * row, int * co
 
 		long choice = strtol(buffer, &err, 10);
 
-		switch(choice)
+		switch(choice) //switch statment to check user input and do the correct menu options
 		{
 		case 1:
 			if (savefile(array, x, row, col) == -1)
@@ -90,22 +98,22 @@ int menu_actions(char ** array, char * x, int * shipcounter, int * row, int * co
 			break;
 		case 2:
 			printf("Quitting\n");
-			free_func(array, row, col, shipcounter);
+			free_func(array, row, col, shipcounter); //used to free each malloced item
 			exit(1);
 		case 3:
 			shipcount(array, shipcounter, row, col);
 			printf("Ships left: %d\n", *shipcounter);
-			if (*shipcounter <= 0)
+			if (*shipcounter <= 0) //if no ships then the game is done
 			{
 				printf("Game done\n");
 				break;
 			}
-			printboard(array, row, col);
+			printboard(array, row, col); //dont need to print but do so for personal purposes
 			hitmiss(array);
 			fgetc(stdin);
 			break;
 		case 4:
-			if (load_game(array, row, col, x) == -1)
+			if (load_game(array, row, col, x) == -1) //load game from file
 			{
 				free_func(array, row, col, shipcounter);
 				exit(1);
@@ -115,9 +123,7 @@ int menu_actions(char ** array, char * x, int * shipcounter, int * row, int * co
 		default:
 			printf("Invalid entry, try again\n");
 		}
-	}
-
-	return 1;		
+	}		
 }
 
 void free_func(char ** array, int * row, int * col, int * shipcounter)
@@ -150,25 +156,11 @@ int load_game(char ** array, int * row, int * col, char * x)
 	int column = 0;
 	int n = 0;
 
-	/*
-	while(getline(&line, &len, fp) != -1)
-	{
-		//n++;
-		//printf("Row %d\n", n);
-	}
-
-	*col = strlen(line);
-	printf("Col %d\n", *col);
-
-	free(line);
-	rewind(fp);
-	*/
-
 	while(1)
 	{
 		c = fgetc(fp);
 		
-		if (feof(fp))
+		if (feof(fp)) //if at the end of the file dont keep getting chars
 		{
 			break;
 		}
@@ -188,21 +180,18 @@ int load_game(char ** array, int * row, int * col, char * x)
 
 	*row = n+1;
 	*col = column;
-
-	printf("Row %d\n", *row);
-	printf("Col %d\n", *col);
-
 	fclose(fp);
 
 	return 1;
 }
 
 
-int ship_set(char ** array, int * row, int * col)
+int ship_set(char ** array, int * row, int * col) //add another return code to this function
 {
 	char character;
 	int ship_length;
 
+	//call structures to set boat length
 	struct patrol pat;
 	struct sub subm;
 	struct cru crus;
@@ -246,6 +235,7 @@ int ship_set(char ** array, int * row, int * col)
 
 int hitmiss(char ** array)
 {
+	//add number checker
 	int number;
 	printf("Give row number to fire at : ");
 	scanf("%d", &number);
@@ -257,6 +247,8 @@ int hitmiss(char ** array)
 	scanf("%d", &number1);
 	printf("\n");
 	printf("Number: %d\n", number1);
+
+	//checks positions for water, ship, hit, miss
 
 	if (array[number][number1] != '*' && array[number][number1] != 'x' && array[number][number1] != 'm')
 	{
@@ -276,6 +268,10 @@ int hitmiss(char ** array)
 	{
 		printf("Already guessed and its a miss\n");
 	}
+	else
+	{
+		return -1;
+	}
 	
 	return 1;
 }
@@ -289,6 +285,7 @@ int shipcount(char **array, int* shipcounter, int * row, int * col)
 	int battleship = 0;
 	int carrier = 0;
 
+	//used to see what ships are still on board
 	for (int j = 0; j < *row; j++)
 	{
 		for (int i = 0; i < *col; i++)
@@ -379,6 +376,8 @@ int random_ship(char **array, int ship_length, char character, int * row, int * 
 	int i;
 
 	horizantal = rand()%2;
+	
+	//used to check horizantal or vertical on 0 or 1 respectively
 
 	if (horizantal == 0)
 	{
@@ -388,7 +387,7 @@ int random_ship(char **array, int ship_length, char character, int * row, int * 
 
 		for (i = 0; i < ship_length; i++)
 		{
-			if (col_rand <= (*col/2))
+			if (col_rand <= (*col/2)) //if the random col number is less then half the board go up in numbers(down on the board)
 			{			
 				if (array[row_rand][col_rand+i] != '*')
 				{
@@ -397,7 +396,7 @@ int random_ship(char **array, int ship_length, char character, int * row, int * 
 			}
 			else
 			{
-				if (array[row_rand][col_rand-i] != '*')
+				if (array[row_rand][col_rand-i] != '*') //otherwise go down in numbers(up on the board)
 				{
 					return 0;
 				}
@@ -422,12 +421,12 @@ int random_ship(char **array, int ship_length, char character, int * row, int * 
 	}
 	else
 	{
-		int row_rand = rand()%*row;//vertical
+		int row_rand = rand()%*row;
 		int col_rand = rand()%*col;
 
 		for (i = 0; i < ship_length; i++)
 		{
-			if (row_rand <= (*row/2))
+			if (row_rand <= (*row/2))//if the random row number is less then half the board go to the right
 			{			
 				if (array[row_rand+i][col_rand] != '*')
 				{
@@ -436,7 +435,7 @@ int random_ship(char **array, int ship_length, char character, int * row, int * 
 			}
 			else
 			{
-				if (array[row_rand-i][col_rand] != '*')
+				if (array[row_rand-i][col_rand] != '*') //otherwise for to the left
 				{
 					return 0;
 				}
