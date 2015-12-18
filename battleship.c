@@ -2,8 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
-#define COL 12
-#define ROW 14
+#include <sys/types.h>
 
 
 #include "battleship_header.h"
@@ -14,9 +13,22 @@ int main (int argc, char * argv[]) //int menu (char * argv[]) for file input //a
 
 	if (argc == 2)
 	{
-		printf("Run check for argument value\n");
+		printf("Correct arguments given\n");
+	}
+	else
+	{
+		printf("There was an error with the commands given\n");
+		exit(1);
 	}
 	char * x;
+
+	int * col = malloc(sizeof(int));
+
+	int * row = malloc(sizeof(int));
+
+	*col = 12;
+
+	*row = 14;
 
 	int * shipcounter = malloc(sizeof(shipcounter));
 
@@ -24,29 +36,31 @@ int main (int argc, char * argv[]) //int menu (char * argv[]) for file input //a
 
 	x = argv[1];
 
-	array = malloc(ROW* sizeof(void*));
-	for (int u = 0; u < ROW; u++)
+	array = malloc((*row) * sizeof(void*));
+	for (int u = 0; u < (*row); u++)
 	{
-		array[u] = malloc(COL*sizeof(char));
-		memset(array[u], '*', (COL*sizeof(char)));
+		array[u] = malloc((*col) * sizeof(char));
+		memset(array[u], '*', ((*col) * sizeof(char)));
 	}
 
-	ship_set(array);
+	ship_set(array, row, col);
 
-	menu_actions(array, x, shipcounter);
+	menu_actions(array, x, shipcounter, row, col);
 
 	free(shipcounter);
 
-	for (int freer = 0; freer < ROW; freer++)
+	for (int freer = 0; freer < (*row); freer++)
 	{
 		free(array[freer]);
 	}
 	free(array);
-	
+
+	free(col);
+	free(row);	
 }
 
 //menu used to ask user if they want to save file or not
-int menu_actions(char ** array, char * x, int * shipcounter)
+int menu_actions(char ** array, char * x, int * shipcounter, int * row, int * col)
 {
 	while(1)
 	{
@@ -67,34 +81,35 @@ int menu_actions(char ** array, char * x, int * shipcounter)
 		switch(choice)
 		{
 		case 1:
-			savefile(array, x);
+			if (savefile(array, x, row, col) == -1)
+			{
+				free_func(array, row, col, shipcounter);
+				exit(1);
+			}
 			printf("File saved\n");
 			break;
 		case 2:
 			printf("Quitting\n");
-			for (int freer = 0; freer < ROW; freer++)
-			{
-				free(array[freer]);
-			}
-			free(array);
-
-			free(shipcounter);
+			free_func(array, row, col, shipcounter);
 			exit(1);
 		case 3:
-			shipcount(array, shipcounter);
+			shipcount(array, shipcounter, row, col);
 			printf("Ships left: %d\n", *shipcounter);
 			if (*shipcounter <= 0)
 			{
 				printf("Game done\n");
 				break;
 			}
-			printboard(array);
+			printboard(array, row, col);
 			hitmiss(array);
 			fgetc(stdin);
 			break;
 		case 4:
-			load_game();
-			printf("Load game board\n");
+			if (load_game(array, row, col, x) == -1)
+			{
+				free_func(array, row, col, shipcounter);
+				exit(1);
+			}
 			break;
 		
 		default:
@@ -105,34 +120,85 @@ int menu_actions(char ** array, char * x, int * shipcounter)
 	return 1;		
 }
 
-
-int load_game()
+void free_func(char ** array, int * row, int * col, int * shipcounter)
 {
-	FILE *fp = fopen("boobs", "r");
-
-	char *buffer = malloc(1024);
-
-	memset(buffer, '\0', 1024);
-
-	int c = 0;
-	size_t cn;
-
-	while(fgets(buffer, 100, fp))
+	for (int freer = 0; freer < (*row); freer++)
 	{
-		c++;
-		cn = (strlen(buffer) - 1);
-		printf("Lines %d\n", c);
-		printf("Size %zd\n", cn);
+		free(array[freer]);
+	}
+	free(array);
+	free(shipcounter);
+	free(row);
+	free(col);
+}
+
+int load_game(char ** array, int * row, int * col, char * x)
+{
+	FILE *fp = fopen(x, "r");
+
+	if (fp == NULL)
+	{
+		fprintf(stderr, "You done fudged!\n");
+		//fclose(fp);
+		return -1;
 	}
 
-	free(buffer);
+	printf("Load game board\n");
+
+	int c;
+	int count = 0;
+	int column = 0;
+	int n = 0;
+
+	/*
+	while(getline(&line, &len, fp) != -1)
+	{
+		//n++;
+		//printf("Row %d\n", n);
+	}
+
+	*col = strlen(line);
+	printf("Col %d\n", *col);
+
+	free(line);
+	rewind(fp);
+	*/
+
+	while(1)
+	{
+		c = fgetc(fp);
+		
+		if (feof(fp))
+		{
+			break;
+		}
+
+		if (c == '\n')
+		{
+			n++;
+			column = count;
+			count = 0;
+		}
+		else
+		{
+			array[n][count] = c;
+			count++;
+		}
+	}
+
+	*row = n+1;
+	*col = column;
+
+	printf("Row %d\n", *row);
+	printf("Col %d\n", *col);
+
 	fclose(fp);
 
 	return 1;
 }
 
 
-int ship_set(char ** array)
+int ship_set(char ** array, int * row, int * col)
 {
 	char character;
 	int ship_length;
@@ -153,27 +219,27 @@ int ship_set(char ** array)
 
 	ship_length = pat.patrol_boat;
 	character = 'P';
-	while(random_ship(array, ship_length, character) != 1);
+	while(random_ship(array, ship_length, character, row, col) != 1);
 
 	ship_length = subm.submarine;
 	character = 'S';
-	while(random_ship(array, ship_length, character) != 1);
+	while(random_ship(array, ship_length, character, row, col) != 1);
 
 	ship_length = crus.cruiser;
 	character = 'C';
-	while(random_ship(array, ship_length, character) != 1);
+	while(random_ship(array, ship_length, character, row, col) != 1);
 
 	ship_length = des.destroyer;
 	character = 'D';
-	while(random_ship(array, ship_length, character) != 1);
+	while(random_ship(array, ship_length, character, row, col) != 1);
 
 	ship_length = bat.battleship;
 	character = 'B';
-	while(random_ship(array, ship_length, character) != 1);
+	while(random_ship(array, ship_length, character, row, col) != 1);
 
 	ship_length = car.aircraft_carrier;
 	character = 'A';
-	while(random_ship(array, ship_length, character) != 1);
+	while(random_ship(array, ship_length, character, row, col) != 1);
 
 	return 1;
 }
@@ -192,24 +258,29 @@ int hitmiss(char ** array)
 	printf("\n");
 	printf("Number: %d\n", number1);
 
-	if (array[number][number1] != '*' && array[number][number1] != 'x')
+	if (array[number][number1] != '*' && array[number][number1] != 'x' && array[number][number1] != 'm')
 	{
 		printf("Hit\n");
 		array[number][number1] = 'x';
+	}
+	else if (array[number][number1] == '*')
+	{
+		printf("Miss\n");
+		array[number][number1] = 'm';
 	}
 	else if (array[number][number1] == 'x')
 	{
 		printf("Already hit\n");
 	}
-	else
+	else if (array[number][number1] == 'm')
 	{
-		printf("Miss\n");
+		printf("Already guessed and its a miss\n");
 	}
 	
 	return 1;
 }
 
-int shipcount(char **array, int* shipcounter)
+int shipcount(char **array, int* shipcounter, int * row, int * col)
 {
 	int patrolboat = 0;
 	int submarine = 0;
@@ -218,9 +289,9 @@ int shipcount(char **array, int* shipcounter)
 	int battleship = 0;
 	int carrier = 0;
 
-	for (int j = 0; j < ROW; j++)
+	for (int j = 0; j < *row; j++)
 	{
-		for (int i = 0; i < COL; i++)
+		for (int i = 0; i < *col; i++)
 		{
 			if (array[j][i] == 'P')
 			{
@@ -251,22 +322,34 @@ int shipcount(char **array, int* shipcounter)
 
 	*shipcounter = patrolboat + submarine + cruiser + destroyer + battleship + carrier;
 
-	printf("shipcounter %d\n", *shipcounter);
-
 	return 1;
 }
 
-int savefile(char **array, char * x)
+int savefile(char **array, char * x, int * row, int * col)
 {
 	FILE *fp;
 	fp = fopen(x, "w+");
 
-	for (int j = 0; j < ROW; j++)
+	if(fp == NULL)
 	{
-		for (int i = 0; i < COL; i++)
+		fprintf(stderr, "Error saving to file\n");
+		return -1;
+	}
+
+
+
+	for (int j = 0; j < *row; j++)
+	{
+		for (int i = 0; i < *col; i++)
 		{
 			fprintf(fp, "%c", array[j][i]);
 		}
+
+		if (j == ((*row)-1))
+		{
+			break;
+		}
+
 		fprintf(fp, "\n");
 	}
 
@@ -275,14 +358,14 @@ int savefile(char **array, char * x)
 	return 1;
 }
 
-void printboard(char **array)
+void printboard(char **array, int * row, int * col)
 {
 	int i;
 	int j;
 
-	for (j = 0; j < ROW; j++)
+	for (j = 0; j < *row; j++)
 	{
-		for (i = 0; i < COL; i++)
+		for (i = 0; i < *col; i++)
 		{
 			printf("%c ", array[j][i]);
 		}
@@ -290,9 +373,8 @@ void printboard(char **array)
 	}
 }
 
-int random_ship(char **array, int ship_length, char character)
+int random_ship(char **array, int ship_length, char character, int * row, int * col)
 {
-	//printf();
 	int horizantal;
 	int i;
 
@@ -300,22 +382,22 @@ int random_ship(char **array, int ship_length, char character)
 
 	if (horizantal == 0)
 	{
-		int ROW_rand = rand()%ROW;//vertical
-		int COL_rand = rand()%COL;
+		int row_rand = rand()%*row;//vertical
+		int col_rand = rand()%*col;
 		
 
 		for (i = 0; i < ship_length; i++)
 		{
-			if (COL_rand <= (COL/2))
+			if (col_rand <= (*col/2))
 			{			
-				if (array[ROW_rand][COL_rand+i] != '*')
+				if (array[row_rand][col_rand+i] != '*')
 				{
 					return 0;
 				}
 			}
 			else
 			{
-				if (array[ROW_rand][COL_rand-i] != '*')
+				if (array[row_rand][col_rand-i] != '*')
 				{
 					return 0;
 				}
@@ -326,35 +408,35 @@ int random_ship(char **array, int ship_length, char character)
 	
 		for (int apple = 0; apple < ship_length; apple++)
 		{
-			if (COL_rand <= (COL/2))
+			if (col_rand <= (*col/2))
 			{
-				array[ROW_rand][COL_rand+apple] = character;
+				array[row_rand][col_rand+apple] = character;
 
 			}
 			else
 			{
-				array[ROW_rand][COL_rand-apple] = character;
+				array[row_rand][col_rand-apple] = character;
 			}
 		}
 		return 1;
 	}
 	else
 	{
-		int ROW_rand = rand()%ROW;//vertical
-		int COL_rand = rand()%COL;
+		int row_rand = rand()%*row;//vertical
+		int col_rand = rand()%*col;
 
 		for (i = 0; i < ship_length; i++)
 		{
-			if (ROW_rand <= (ROW/2))
+			if (row_rand <= (*row/2))
 			{			
-				if (array[ROW_rand+i][COL_rand] != '*')
+				if (array[row_rand+i][col_rand] != '*')
 				{
 					return 0;
 				}
 			}
 			else
 			{
-				if (array[ROW_rand-i][COL_rand] != '*')
+				if (array[row_rand-i][col_rand] != '*')
 				{
 					return 0;
 				}
@@ -364,13 +446,13 @@ int random_ship(char **array, int ship_length, char character)
 
 		for (int apples = 0; apples < ship_length; apples++)
 		{
-			if (ROW_rand <= (ROW/2))
+			if (row_rand <= (*row/2))
 			{
-				array[ROW_rand+apples][COL_rand] = character;
+				array[row_rand+apples][col_rand] = character;
 			}
 			else
 			{
-				array[ROW_rand-apples][COL_rand] = character;
+				array[row_rand-apples][col_rand] = character;
 			}
 		}
 
